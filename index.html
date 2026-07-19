@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#bb1e28">
+  <meta name="description" content="Leigh Leopards Matchday Centre">
+  <title>Leigh Leopards Matchday Centre</title>
+  <link rel="preload" href="assets/leopard-pattern.webp" as="image">
+  <link rel="preload" href="assets/leigh-leopards-logo.webp" as="image">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section id="home-view" class="view home-view" aria-labelledby="page-title">
+      <div class="home-card">
+        <img
+          class="club-logo club-logo--home"
+          src="assets/leigh-leopards-logo.webp"
+          alt="Leigh Leopards"
+          width="720"
+          height="720"
+        >
+
+        <h1 id="page-title" class="page-title">
+          <img src="assets/matchday-centre.png" alt="Matchday Centre">
+        </h1>
+
+        <nav class="action-list" aria-label="Matchday links">
+          <a class="action-button" href="#turley">
+            Turley Challenge
+          </a>
+
+          <a class="action-button" href="#share">
+            Share Photos
+          </a>
+
+          <a class="action-button" href="https://leighleopards.venuetoolbox.com/LeighSportsVillage/ASP/bookTickets.asp" target="_blank" rel="noopener noreferrer">
+            Buy Tickets
+          </a>
+
+          <a class="action-button" href="https://leighleopards.co.uk/shop/" target="_blank" rel="noopener noreferrer">
+            Club Shop
+          </a>
+        </nav>
+      </div>
+    </section>
+
+    <section id="turley-view" class="view turley-view" aria-labelledby="turley-page-title" hidden>
+      <div class="challenge-shell">
+        <header class="challenge-topbar">
+          <img class="challenge-topbar-logo" src="assets/leigh-leopards-logo.webp" alt="" width="720" height="720">
+          <h1 id="turley-page-title">Match Centre</h1>
+          <button id="close-challenge" class="challenge-close" type="button" aria-label="Close Turley Challenge">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6 18 18M18 6 6 18" />
+            </svg>
+          </button>
+        </header>
+
+        <section class="challenge-scoreboard" aria-label="Turley Challenge scoreboard">
+          <div class="scoreboard-main">
+            <div class="scoreboard-led-dots" aria-hidden="true"></div>
+            <div class="scoreboard-led-wash" aria-hidden="true"></div>
+            <div class="scoreboard-grid">
+              <div class="scoreboard-label-wrap">
+                <div class="scoreboard-label">Turley Challenge</div>
+              </div>
+
+              <div class="scoreboard-crest-cell scoreboard-crest-cell--home">
+                <img class="scoreboard-crest" src="assets/leigh-leopards-logo.webp" alt="Leigh Leopards crest">
+              </div>
+              <div class="scoreboard-code scoreboard-code--home">LEI</div>
+              <div id="leigh-score" class="scoreboard-score" aria-label="Leigh score">0</div>
+              <div class="scoreboard-code scoreboard-code--away">WAR</div>
+              <div class="scoreboard-crest-cell scoreboard-crest-cell--away">
+                <img class="scoreboard-crest scoreboard-crest--away" src="assets/warrington-placeholder.svg" alt="Warrington Wolves crest placeholder">
+              </div>
+
+              <div id="kick-markers" class="kick-markers" aria-label="Successful kicks"></div>
+            </div>
+          </div>
+
+          <div class="challenge-ticker">
+            <span id="challenge-ticker-text">Leigh to kick</span>
+          </div>
+        </section>
+
+        <section id="rugby-pitch" class="rugby-pitch" aria-label="Rugby conversion pitch">
+          <div id="crowd-backdrop" class="crowd-backdrop" aria-hidden="true"></div>
+
+          <div class="pitch-ad-board" aria-label="Leigh Leopards advertising board">
+            <span>Leigh Leopards</span>
+          </div>
+
+          <div class="rugby-posts" aria-hidden="true">
+            <span class="post post--left"></span>
+            <span class="post post--right"></span>
+            <span class="crossbar"></span>
+          </div>
+
+          <div class="pitch-mow" aria-hidden="true"></div>
+          <div class="pitch-line" aria-hidden="true"></div>
+
+          <div id="rugby-ball" class="rugby-ball-wrap" role="img" aria-label="Rugby ball">
+            <span class="rugby-ball">
+              <span class="ball-seam"></span>
+              <span class="ball-lace ball-lace--1"></span>
+              <span class="ball-lace ball-lace--2"></span>
+              <span class="ball-lace ball-lace--3"></span>
+            </span>
+          </div>
+
+          <section class="kick-controls" aria-label="Kick controls">
+            <p id="kick-instruction" class="visually-hidden" aria-live="polite">Start the challenge, then stop the power and accuracy meters.</p>
+
+            <div id="meter-panel" class="meter-panel" hidden>
+              <div id="meter-label" class="meter-header">Kick Power</div>
+              <div id="kick-meter" class="kick-meter" aria-label="Power meter">
+                <span id="meter-target" class="meter-target"></span>
+                <span class="meter-centre" aria-hidden="true"></span>
+                <span id="meter-needle" class="meter-needle"></span>
+              </div>
+              <span id="meter-value" class="visually-hidden">0</span>
+            </div>
+
+            <button id="kick-button" class="kick-button" type="button">Start Kick</button>
+          </section>
+        </section>
+      </div>
+    </section>
+
+    <section id="share-view" class="view share-view" aria-labelledby="share-title" hidden>
+      <div class="share-card">
+        <header class="share-header">
+          <a class="back-button" href="#home" aria-label="Back to Matchday Centre">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15.5 4.5 8 12l7.5 7.5" />
+            </svg>
+            <span>Back</span>
+          </a>
+
+          <img
+            class="club-logo club-logo--small"
+            src="assets/leigh-leopards-logo.webp"
+            alt=""
+            width="720"
+            height="720"
+          >
+        </header>
+
+        <div class="upload-panel">
+          <div class="upload-heading">
+            <p class="eyebrow">Matchday Centre</p>
+            <h1 id="share-title">Share Your Photo</h1>
+            <p>Take a new photo or choose one from your phone. Approved photos may appear in the fan gallery and on the big screen.</p>
+          </div>
+
+          <div id="photo-picker" class="photo-picker">
+            <div class="picker-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3A2 2 0 0 1 22 9.5v9A2 2 0 0 1 20 20H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </div>
+            <strong>Add a matchday photo</strong>
+            <span>JPG, PNG or WEBP · up to 15MB</span>
+          </div>
+
+          <div class="picker-actions" aria-label="Choose a photo source">
+            <label class="source-button" for="camera-input">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3A2 2 0 0 1 22 9.5v9A2 2 0 0 1 20 20H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              Take Photo
+            </label>
+            <input id="camera-input" class="visually-hidden" type="file" accept="image/*" capture="environment">
+
+            <label class="source-button" for="gallery-input">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <circle cx="8.5" cy="9" r="1.5" />
+                <path d="m4.5 17 4.2-4.2 3.2 3.2 2.2-2.2 5.4 5.2" />
+              </svg>
+              Choose Photo
+            </label>
+            <input id="gallery-input" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp">
+          </div>
+
+          <div id="preview-card" class="preview-card" hidden>
+            <img id="photo-preview" src="" alt="Selected photo preview">
+            <div class="preview-toolbar">
+              <div class="file-details">
+                <strong id="file-name"></strong>
+                <span id="file-size"></span>
+              </div>
+              <button id="remove-photo" class="text-button" type="button">Remove</button>
+            </div>
+          </div>
+
+          <form id="photo-form" class="photo-form" novalidate>
+            <label class="field-label" for="supporter-name">
+              First name <span>(optional)</span>
+            </label>
+            <input id="supporter-name" class="text-input" name="supporterName" type="text" maxlength="30" autocomplete="given-name" placeholder="Your first name">
+
+            <label class="consent-row" for="photo-consent">
+              <input id="photo-consent" type="checkbox" required>
+              <span>I confirm I have permission to share this photo and agree that Leigh Leopards may display it publicly.</span>
+            </label>
+
+            <p id="form-message" class="form-message" role="alert" aria-live="polite"></p>
+
+            <button id="submit-photo" class="submit-button" type="submit" disabled>
+              Submit Photo
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="success-view" class="view success-view" aria-labelledby="success-title" hidden>
+      <div class="success-card">
+        <img
+          class="club-logo club-logo--success"
+          src="assets/leigh-leopards-logo.webp"
+          alt="Leigh Leopards"
+          width="720"
+          height="720"
+        >
+        <div class="success-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7" /></svg>
+        </div>
+        <p class="eyebrow">Photo Received</p>
+        <h1 id="success-title">Thanks for sharing!</h1>
+        <p>Your photo has been added to the approval queue. Keep an eye on the fan gallery and big screen.</p>
+        <button id="share-another" class="action-button" type="button">Share Another</button>
+        <a class="simple-link" href="#home">Back to Matchday Centre</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="challenge-modal" class="challenge-modal" role="dialog" aria-modal="true" aria-labelledby="challenge-result-title" hidden>
+    <div class="challenge-modal-card">
+      <button id="modal-close" class="modal-close" type="button" aria-label="Close result">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19" /></svg>
+      </button>
+
+      <div class="modal-tabs" role="tablist" aria-label="Challenge result tabs">
+        <button id="result-tab" class="modal-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="result-panel">Result</button>
+        <button id="leaderboard-tab" class="modal-tab" type="button" role="tab" aria-selected="false" aria-controls="leaderboard-panel">Leaderboard</button>
+      </div>
+
+      <section id="result-panel" class="modal-panel" role="tabpanel" aria-labelledby="result-tab">
+        <img class="modal-logo" src="assets/leigh-leopards-logo.webp" alt="" width="720" height="720">
+        <p class="modal-eyebrow">Turley Challenge</p>
+        <h2 id="challenge-result-title">Challenge Over</h2>
+        <div class="result-scoreline"><span>LEI</span><strong id="result-score">0</strong><span>WAR</span></div>
+        <p id="result-copy" class="result-copy">You scored 0 conversions.</p>
+
+        <label class="score-name-label" for="score-name">Name for the leaderboard</label>
+        <input id="score-name" class="score-name-input" type="text" maxlength="12" autocomplete="nickname" placeholder="Guest">
+        <button id="save-score" class="modal-primary-button" type="button">Save Score</button>
+        <p id="score-save-message" class="score-save-message" role="status" aria-live="polite"></p>
+
+        <div class="modal-action-row">
+          <button id="play-again" class="modal-secondary-button" type="button">Play Again</button>
+          <button id="return-home" class="modal-secondary-button" type="button">Match Centre</button>
+        </div>
+      </section>
+
+      <section id="leaderboard-panel" class="modal-panel" role="tabpanel" aria-labelledby="leaderboard-tab" hidden>
+        <p class="modal-eyebrow">Turley Challenge</p>
+        <h2>Leaderboard</h2>
+        <div class="leaderboard-head" aria-hidden="true"><span>#</span><span>Name</span><span>Kicks</span></div>
+        <ol id="leaderboard-list" class="leaderboard-list"></ol>
+        <p class="leaderboard-note">Prototype scores are stored on this device. Firebase will make the leaderboard live across all supporters.</p>
+        <button id="leaderboard-back" class="modal-primary-button" type="button">Back to Result</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="script.js"></script>
+</body>
+</html>
