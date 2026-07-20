@@ -20,6 +20,13 @@ const consentInput = document.querySelector('#photo-consent');
 const submitButton = document.querySelector('#submit-photo');
 const formMessage = document.querySelector('#form-message');
 const shareAnotherButton = document.querySelector('#share-another');
+const supporterNameInput = document.querySelector('#supporter-name');
+const pickerActions = document.querySelector('.picker-actions');
+const previewToolbar = document.querySelector('.preview-toolbar');
+const uploadProgress = document.querySelector('#upload-progress');
+const uploadStatus = document.querySelector('#upload-status');
+const uploadPercent = document.querySelector('#upload-percent');
+const uploadProgressBar = document.querySelector('#upload-progress-bar');
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const VALID_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -27,6 +34,7 @@ let selectedFile = null;
 let previewUrl = '';
 let toastTimer;
 let activeView = 'home';
+let uploadInProgress = false;
 
 function showView(name) {
   Object.entries(views).forEach(([viewName, element]) => {
@@ -81,7 +89,31 @@ function formatFileSize(bytes) {
 }
 
 function updateSubmitState() {
-  submitButton.disabled = !(selectedFile && consentInput.checked);
+  submitButton.disabled = uploadInProgress || !(selectedFile && consentInput.checked);
+}
+
+function setUploadProgress({ visible, percent = 0, status = 'Preparing photo…' }) {
+  const safePercent = Math.min(100, Math.max(0, Math.round(percent)));
+  uploadProgress.hidden = !visible;
+  uploadProgress.setAttribute('aria-valuenow', String(safePercent));
+  uploadStatus.textContent = status;
+  uploadPercent.textContent = `${safePercent}%`;
+  uploadProgressBar.style.width = `${safePercent}%`;
+}
+
+function setUploadState(isUploading) {
+  uploadInProgress = isUploading;
+  photoForm.classList.toggle('is-uploading', isUploading);
+  pickerActions.classList.toggle('is-uploading', isUploading);
+  previewToolbar.classList.toggle('is-uploading', isUploading);
+  cameraInput.disabled = isUploading;
+  galleryInput.disabled = isUploading;
+  removePhotoButton.disabled = isUploading;
+  supporterNameInput.disabled = isUploading;
+  consentInput.disabled = isUploading;
+  submitButton.classList.toggle('is-loading', isUploading);
+  submitButton.textContent = isUploading ? 'Submitting…' : 'Submit Photo';
+  updateSubmitState();
 }
 
 function clearPreview() {
@@ -140,10 +172,10 @@ function handleFileSelection(event) {
 }
 
 function resetForm() {
+  setUploadState(false);
   photoForm.reset();
   clearPreview();
-  submitButton.textContent = 'Submit Photo';
-  submitButton.classList.remove('is-loading');
+  setUploadProgress({ visible: false });
 }
 
 placeholderButtons.forEach((button) => {
@@ -157,9 +189,45 @@ galleryInput.addEventListener('change', handleFileSelection);
 removePhotoButton.addEventListener('click', clearPreview);
 consentInput.addEventListener('change', updateSubmitState);
 
-photoForm.addEventListener('submit', (event) => {
+function firebaseErrorMessage(error) {
+  const code = String(error?.code || '');
+
+  if (!navigator.onLine) {
+    return 'You appear to be offline. Reconnect and try the upload again.';
+  }
+
+  if (code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation') {
+    return 'Anonymous sign-in is not enabled in Firebase Authentication yet.';
+  }
+
+  if (code === 'storage/unauthorized' || code === 'permission-denied') {
+    return 'Firebase blocked the upload. Deploy the included Firestore and Storage rules, then try again.';
+  }
+
+  if (code === 'storage/quota-exceeded') {
+    return 'The photo service has reached its current storage allowance.';
+  }
+
+  if (code === 'storage/retry-limit-exceeded' || code === 'storage/unknown') {
+    return 'The upload connection timed out. Please try again.';
+  }
+
+  if (code === 'storage/canceled') {
+    return 'The photo upload was cancelled.';
+  }
+
+  if (code === 'failed-precondition') {
+    return 'Firebase Storage or Firestore has not been fully enabled for this project.';
+  }
+
+  return 'The photo could not be submitted. Please try again.';
+}
+
+photoForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   formMessage.textContent = '';
+
+  if (uploadInProgress) return;
 
   if (!selectedFile) {
     formMessage.textContent = 'Please add a photo before submitting.';
@@ -171,16 +239,33 @@ photoForm.addEventListener('submit', (event) => {
     return;
   }
 
-  submitButton.disabled = true;
-  submitButton.classList.add('is-loading');
-  submitButton.textContent = 'Submitting…';
+  setUploadState(true);
+  setUploadProgress({ visible: true, percent: 0, status: 'Connecting securely…' });
 
-  // Photo upload remains the Pass 1 front-end demonstration. Firebase will
-  // replace this delay when the moderation backend is connected.
-  window.setTimeout(() => {
+  try {
+    const { submitPhotoForModeration } = await import('./firebase.js');
+
+    await submitPhotoForModeration({
+      file: selectedFile,
+      supporterName: supporterNameInput.value,
+      onStatus: (status) => {
+        const currentPercent = Number(uploadProgress.getAttribute('aria-valuenow')) || 0;
+        setUploadProgress({ visible: true, percent: currentPercent, status });
+      },
+      onProgress: (percent) => {
+        setUploadProgress({ visible: true, percent, status: 'Uploading photo…' });
+      },
+    });
+
+    setUploadProgress({ visible: true, percent: 100, status: 'Added to approval queue' });
     resetForm();
     window.location.hash = 'success';
-  }, 900);
+  } catch (error) {
+    console.error('Photo submission failed:', error);
+    formMessage.textContent = firebaseErrorMessage(error);
+    setUploadState(false);
+    setUploadProgress({ visible: false });
+  }
 });
 
 shareAnotherButton.addEventListener('click', () => {

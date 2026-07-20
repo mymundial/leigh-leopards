@@ -1,61 +1,153 @@
-LEIGH LEOPARDS MATCHDAY CENTRE — TURLEY CHALLENGE PASS 2
-========================================================
+LEIGH LEOPARDS MATCHDAY CENTRE — SHARE PHOTOS FIREBASE PASS 2
+==============================================================
 
-OPENING THE PROJECT
+WHAT THIS PASS ADDS
 -------------------
-1. Extract the ZIP.
-2. Open the extracted folder in VS Code.
-3. In the VS Code terminal run:
+The Share Photos form now connects to the Firebase project:
 
-   python3 -m http.server 5500
+  leigh-leopards
 
-4. Open http://localhost:5500
+The working flow is:
 
-PASS 2 MATCH-SCREEN UPDATE
---------------------------
-The Turley Challenge match screen has been rebuilt around the actual Monday Cup
-WeeklyChallengeMatchScreen layout values and styles supplied in mondaycup-main 20.zip.
+  supporter selects or takes a photo
+  -> anonymous Firebase sign-in
+  -> large photos are reduced in the browser where useful
+  -> resumable upload to Firebase Storage
+  -> Firestore document created with status "pending"
+  -> upload progress and errors shown in the app
+  -> supporter sees the Photo Received confirmation screen
 
-Matched Monday Cup layout values:
-- 448px maximum mobile game frame
-- 45px top bar
-- Scoreboard height: 15.6% of the available screen beneath the top bar
-- Ticker height: 24% of the scoreboard
-- Pitch camera: goal/post top 8%, height 30%, width 80%, left 10%
-- Advertising board: 8% pitch height immediately above the 38% field line
-- Ball position: 50% x / 54.5% y
-- Controls: bottom safe-area position, 4% outer inset, maximum 176px control zone
-- Monday Cup power and accuracy meter dimensions, target zones and sweep speeds
+The Turley Challenge from the previous pass is unchanged.
 
-Leigh rugby conversion changes retained:
-- Top bar reads MATCH CENTRE
-- Scoreboard label reads TURLEY CHALLENGE
-- Scoreboard reads LEI 0 WAR
-- Leigh and Warrington crest positions replace flag positions
-- Red leopard-print Leigh top bar, ticker and advertising board
-- LEIGH LEOPARDS advertising-board copy
-- Rugby posts replace the football goal
-- Goalkeeper removed
-- Rugby ball replaces the football
-- Horizontal mowing stripes
-- Straight horizontal field line instead of the penalty-area curve
-- Direction controls removed
-- START KICK begins the power and accuracy sequence
-- Successful conversions add two Leigh points
-- One miss ends the run
-- Result and local prototype leaderboard remain available in the end modal
+FIREBASE DATA CREATED
+---------------------
+Firestore collection:
 
-SUPPLIED MONDAY CUP RESOURCES USED
+  photoSubmissions
+
+Storage path:
+
+  photoSubmissions/leigh-v-warrington-2026/{anonymousUserId}/{submissionId}.jpg
+
+Each Firestore submission includes:
+- ownerId
+- eventId
+- status: pending
+- optional supporterName
+- storagePath
+- file type and size
+- creation timestamp
+- consent version
+
+The current event is controlled by one line in firebase.js:
+
+  export const MATCHDAY_EVENT_ID = 'leigh-v-warrington-2026';
+
+Change that value for each future matchday before deployment.
+
+REQUIRED FIREBASE CONSOLE SETUP
+-------------------------------
+Before testing uploads, confirm all three are enabled:
+
+1. Authentication
+   Authentication -> Sign-in method -> Anonymous -> Enable
+
+2. Firestore Database
+   Create the default Firestore database.
+
+3. Storage
+   Create the default Cloud Storage bucket.
+
+DEPLOY THE INCLUDED SECURITY RULES
 ----------------------------------
-- SportsDIN Bold and Regular fonts
-- Into Dot Matrix scoreboard font
-- WeeklyChallengeMatchScreen sizing and scoreboard proportions
-- Monday Cup crowd-generation geometry
-- Monday Cup meter styling, target zones and meter speeds
+Vercel deploys the website, but it does not deploy Firebase security rules.
+Run this once from the extracted project folder:
+
+  npx firebase-tools login
+  npx firebase-tools deploy --only firestore:rules,storage --project leigh-leopards
+
+Included files:
+- firebase.json
+- .firebaserc
+- firestore.rules
+- storage.rules
+
+The Pass 2 rules allow an authenticated anonymous supporter to:
+- upload JPG, PNG or WEBP images up to 15MB
+- create only a pending submission owned by their Firebase user ID
+
+The rules do not allow supporters to:
+- read the approval queue
+- approve or reject photos
+- edit submissions
+- read uploaded images
+
+Staff access and approved-photo reads will be added with the moderation and gallery passes.
+
+LOCAL TEST
+----------
+Do not open index.html directly as a file. Use a local web server because the
+Firebase SDK is loaded as JavaScript modules.
+
+In VS Code Terminal:
+
+  python3 -m http.server 5500
+
+Then open:
+
+  http://localhost:5500
+
+VERCEL DEPLOYMENT
+-----------------
+Copy these files over the current Leigh Matchday project, then commit and push:
+
+  git add .
+  git commit -m "Connect Share Photos to Firebase"
+  git push
+
+Vercel will rebuild the website. The browser then connects directly to Firebase.
+
+PASS 2 FILES
+------------
+- index.html               upload progress interface added
+- styles.css               upload progress and disabled-state styling
+- script.js                live Firebase submission flow and error handling
+- firebase.js              Firebase configuration and upload/database logic
+- firestore.rules          pending-submission database permissions
+- storage.rules            image upload permissions and validation
+- firebase.json            Firebase CLI rule deployment configuration
+- .firebaserc              Firebase project mapping
 
 CURRENT LIMITATIONS
 -------------------
-- assets/warrington-placeholder.svg is still a placeholder and should be replaced
-  with the approved Warrington Wolves crest.
-- Leaderboard scores are stored locally in the browser until Firebase is connected.
-- Share Photos remains a front-end demonstration until the Firebase upload pass.
+- There is not yet a staff approval page.
+- There is not yet a public approved-photo gallery.
+- There is not yet a big-screen carousel.
+- Uploaded photos and Firestore submissions are deliberately private under the
+  current rules until the moderation pass is built.
+- The Turley Challenge leaderboard is still stored locally in the browser.
+
+LOCAL DEVELOPMENT WITH VS CODE / VITE
+--------------------------------------
+Open this project folder in VS Code, then run:
+
+  npm install
+  npm run dev
+
+Open the URL shown in the terminal, normally:
+
+  http://localhost:5173
+
+The moderation page is available at:
+
+  http://localhost:5173/admin
+
+PIN: 1239
+
+Create a production build with:
+
+  npm run build
+
+Preview that build locally with:
+
+  npm run preview

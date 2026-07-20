@@ -1,0 +1,205 @@
+@font-face {
+  font-family: 'SportsDIN';
+  src: url('/assets/SportsDINRegular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SportsDIN';
+  src: url('/assets/SportsDINBold.woff2') format('woff2');
+  font-weight: 800 1000;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --red: #c8102e;
+  --red-dark: #790016;
+  --black: #090909;
+  --white: #fff;
+  --paper: #f2efe9;
+  --line: #ded9d1;
+  --muted: #6c6964;
+  --yellow: #ffdc00;
+}
+
+* { box-sizing: border-box; }
+html { min-height: 100%; background: var(--paper); }
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--black);
+  background: var(--paper);
+  font-family: 'SportsDIN', Arial, sans-serif;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+[hidden] { display: none !important; }
+
+.pin-view {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(0,0,0,.72), rgba(0,0,0,.82)),
+    url('/assets/leopard-pattern.webp') center / 560px auto repeat;
+}
+
+.pin-card {
+  width: min(880px, 100%);
+  min-height: 510px;
+  display: grid;
+  grid-template-columns: minmax(290px, .9fr) minmax(360px, 1.1fr);
+  overflow: hidden;
+  background: var(--white);
+  border-radius: 18px;
+  box-shadow: 0 32px 90px rgba(0,0,0,.45);
+}
+
+.brand-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 48px;
+  color: var(--white);
+  background:
+    linear-gradient(145deg, rgba(192,6,42,.93), rgba(107,0,18,.97)),
+    url('/assets/leopard-pattern.webp') center / 460px auto repeat;
+}
+.brand-panel img { width: min(225px, 80%); filter: drop-shadow(0 14px 18px rgba(0,0,0,.3)); }
+.brand-panel span { font-size: .75rem; font-weight: 1000; letter-spacing: .22em; text-transform: uppercase; }
+
+.pin-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(36px, 7vw, 72px);
+}
+.eyebrow { margin: 0 0 8px; color: var(--red); font-size: .68rem; font-weight: 1000; letter-spacing: .18em; text-transform: uppercase; }
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { font-weight: 1000; line-height: .98; text-transform: uppercase; }
+.pin-content h1 { margin-bottom: 17px; font-size: clamp(2rem, 5vw, 3.3rem); }
+.intro-copy { max-width: 440px; margin-bottom: 30px; color: var(--muted); font-size: .96rem; line-height: 1.5; }
+.pin-form label { display: block; margin-bottom: 8px; font-size: .72rem; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; }
+.pin-form input {
+  width: 100%;
+  height: 68px;
+  padding: 0 18px;
+  color: var(--black);
+  background: #f8f6f2;
+  border: 2px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+  font-size: 2rem;
+  font-weight: 1000;
+  letter-spacing: .5em;
+  text-align: center;
+}
+.pin-form input:focus { border-color: var(--red); box-shadow: 0 0 0 4px rgba(200,16,46,.12); }
+.pin-form input[aria-invalid="true"] { border-color: var(--red); }
+.form-message { min-height: 22px; margin: 8px 0 8px; color: var(--red); font-size: .8rem; font-weight: 800; }
+.primary-button, .header-button {
+  min-height: 50px;
+  border: 0;
+  border-radius: 7px;
+  font-size: .76rem;
+  font-weight: 1000;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.primary-button { width: 100%; color: var(--white); background: var(--red); }
+.primary-button:disabled { opacity: .65; }
+.back-link { align-self: flex-start; margin-top: 24px; color: var(--black); font-size: .78rem; font-weight: 900; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+.dashboard-view { min-height: 100vh; background: #ece9e2; }
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px clamp(18px, 4vw, 52px);
+  color: var(--white);
+  background:
+    linear-gradient(90deg, rgba(174,7,38,.94), rgba(111,2,24,.97)),
+    url('/assets/leopard-pattern.webp') center / 520px auto repeat;
+  box-shadow: 0 8px 24px rgba(0,0,0,.24);
+}
+.header-brand { display: flex; align-items: center; gap: 16px; }
+.header-brand img { width: 64px; height: 64px; object-fit: contain; }
+.header-brand p { margin: 0 0 3px; font-size: .66rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+.header-brand h1 { margin: 0; font-size: clamp(1.15rem, 3vw, 2rem); }
+.header-button { min-height: 42px; padding: 0 16px; color: var(--black); background: var(--yellow); }
+.dashboard-content { width: min(1480px, 100%); margin: 0 auto; padding: clamp(18px, 4vw, 48px); }
+
+.event-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(22px, 4vw, 34px);
+  color: var(--white);
+  background: var(--black);
+  border-radius: 15px;
+  box-shadow: 0 14px 35px rgba(0,0,0,.16);
+}
+.event-banner p { margin: 0 0 6px; color: #c6c6c6; font-size: .68rem; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+.event-banner h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.8rem); }
+.setup-indicator { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; font-size: .75rem; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+.setup-indicator i { width: 9px; height: 9px; background: var(--yellow); border-radius: 50%; box-shadow: 0 0 0 5px rgba(255,220,0,.16); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin: 18px 0; }
+.stat-card { min-height: 116px; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; background: var(--white); border-radius: 12px; box-shadow: 0 7px 18px rgba(0,0,0,.06); }
+.stat-card span { color: var(--muted); font-size: .72rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.stat-card strong { font-size: clamp(2rem, 5vw, 3.5rem); line-height: .9; }
+.stat-card--pending { color: var(--white); background: var(--red); }
+.stat-card--pending span { color: rgba(255,255,255,.78); }
+
+.queue-panel { min-height: 430px; padding: clamp(20px, 4vw, 34px); background: var(--white); border-radius: 15px; box-shadow: 0 12px 28px rgba(0,0,0,.08); }
+.queue-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.queue-toolbar h2 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.6rem); }
+.filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter-tab { min-height: 38px; padding: 0 13px; color: var(--muted); background: var(--paper); border: 0; border-radius: 6px; font-size: .72rem; font-weight: 900; text-transform: uppercase; opacity: 1; }
+.filter-tab.is-active { color: var(--white); background: var(--black); }
+.empty-state { min-height: 310px; display: grid; place-items: center; align-content: center; padding: 30px; color: var(--muted); text-align: center; }
+.empty-state svg { width: 64px; fill: none; stroke: var(--red); stroke-width: 1.5; }
+.empty-state h3 { margin: 16px 0 7px; color: var(--black); }
+.empty-state p { max-width: 620px; margin: 0; line-height: 1.5; }
+
+@media (max-width: 820px) {
+  .pin-card { grid-template-columns: 1fr; min-height: 0; }
+  .brand-panel { min-height: 220px; padding: 26px; }
+  .brand-panel img { width: 155px; }
+  .brand-panel span { display: none; }
+  .pin-content { padding: 34px 26px 38px; }
+  .admin-header { position: static; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .queue-toolbar { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 540px) {
+  .pin-view { padding: 0; background: var(--white); }
+  .pin-card { min-height: 100vh; border-radius: 0; }
+  .brand-panel { min-height: 190px; }
+  .admin-header { min-height: 80px; padding: 10px 14px; }
+  .header-brand { gap: 10px; }
+  .header-brand img { width: 52px; height: 52px; }
+  .header-brand p { font-size: .54rem; }
+  .header-brand h1 { font-size: 1rem; }
+  .dashboard-content { padding: 14px; }
+  .event-banner { align-items: flex-start; flex-direction: column; }
+  .stats-grid { gap: 9px; }
+  .stat-card { min-height: 96px; padding: 15px; }
+  .queue-panel { padding: 18px 14px; }
+  .filter-tabs { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); }
+}

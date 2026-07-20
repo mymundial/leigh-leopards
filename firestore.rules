@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validStoragePath(submissionId) {
+      return (
+          request.resource.data.contentType == 'image/jpeg'
+          && request.resource.data.storagePath ==
+            'photoSubmissions/' + request.resource.data.eventId + '/' + request.auth.uid + '/' + submissionId + '.jpg'
+        ) || (
+          request.resource.data.contentType == 'image/png'
+          && request.resource.data.storagePath ==
+            'photoSubmissions/' + request.resource.data.eventId + '/' + request.auth.uid + '/' + submissionId + '.png'
+        ) || (
+          request.resource.data.contentType == 'image/webp'
+          && request.resource.data.storagePath ==
+            'photoSubmissions/' + request.resource.data.eventId + '/' + request.auth.uid + '/' + submissionId + '.webp'
+        );
+    }
+
+    function validPhotoSubmission(submissionId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'ownerId',
+          'eventId',
+          'status',
+          'supporterName',
+          'storagePath',
+          'originalFileName',
+          'contentType',
+          'fileSize',
+          'createdAt',
+          'consentVersion',
+          'source',
+          'clientVersion'
+        ])
+        && request.resource.data.id == submissionId
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.eventId is string
+        && request.resource.data.eventId.matches('[A-Za-z0-9_-]{1,80}')
+        && request.resource.data.status == 'pending'
+        && request.resource.data.supporterName is string
+        && request.resource.data.supporterName.size() <= 30
+        && request.resource.data.storagePath is string
+        && request.resource.data.originalFileName is string
+        && request.resource.data.originalFileName.size() <= 160
+        && request.resource.data.contentType in ['image/jpeg', 'image/png', 'image/webp']
+        && validStoragePath(submissionId)
+        && request.resource.data.fileSize is int
+        && request.resource.data.fileSize > 0
+        && request.resource.data.fileSize <= 15 * 1024 * 1024
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.consentVersion == '2026-07-19'
+        && request.resource.data.source == 'leigh-matchday-web'
+        && request.resource.data.clientVersion == 'share-photos-pass-2';
+    }
+
+    match /photoSubmissions/{submissionId} {
+      allow create: if signedIn() && validPhotoSubmission(submissionId);
+      allow read, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -212,6 +212,16 @@
 
             <p id="form-message" class="form-message" role="alert" aria-live="polite"></p>
 
+            <div id="upload-progress" class="upload-progress" role="progressbar" aria-label="Photo upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+              <div class="upload-progress-row">
+                <span id="upload-status">Preparing photo…</span>
+                <strong id="upload-percent">0%</strong>
+              </div>
+              <div class="upload-progress-track" aria-hidden="true">
+                <span id="upload-progress-bar"></span>
+              </div>
+            </div>
+
             <button id="submit-photo" class="submit-button" type="submit" disabled>
               Submit Photo
             </button>
@@ -282,6 +292,6 @@
   </div>
 
   <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="script.js"></script>
+  <script type="module" src="/script.js"></script>
 </body>
 </html>

@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validFileName(fileName) {
+      return request.resource.metadata.submissionId is string
+        && request.resource.metadata.submissionId.matches('[A-Za-z0-9_-]{1,80}')
+        && (
+          (request.resource.contentType == 'image/jpeg'
+            && fileName == request.resource.metadata.submissionId + '.jpg')
+          || (request.resource.contentType == 'image/png'
+            && fileName == request.resource.metadata.submissionId + '.png')
+          || (request.resource.contentType == 'image/webp'
+            && fileName == request.resource.metadata.submissionId + '.webp')
+        );
+    }
+
+    function validImageUpload(eventId, userId, fileName) {
+      return request.auth.uid == userId
+        && eventId.matches('[A-Za-z0-9_-]{1,80}')
+        && request.resource.size > 0
+        && request.resource.size <= 15 * 1024 * 1024
+        && request.resource.contentType in ['image/jpeg', 'image/png', 'image/webp']
+        && request.resource.metadata.ownerId == request.auth.uid
+        && request.resource.metadata.eventId == eventId
+        && request.resource.metadata.moderationStatus == 'pending'
+        && validFileName(fileName);
+    }
+
+    match /photoSubmissions/{eventId}/{userId}/{fileName} {
+      allow create: if signedIn() && validImageUpload(eventId, userId, fileName);
+      allow read, update, delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
