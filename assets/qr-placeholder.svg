@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 330" role="img" aria-labelledby="title desc">
+  <title id="title">QR code placeholder</title>
+  <desc id="desc">Decorative placeholder that will be replaced by the live matchday sharing QR code.</desc>
+  <rect width="330" height="330" fill="#fff"/>
+  <g fill="#0a0a0a">
+    <path d="M18 18h90v90H18zM30 30v66h66V30zM43 43h40v40H43z" fill-rule="evenodd"/>
+    <path d="M222 18h90v90h-90zM234 30v66h66V30zM247 43h40v40h-40z" fill-rule="evenodd"/>
+    <path d="M18 222h90v90H18zM30 234v66h66v-66zM43 247h40v40H43z" fill-rule="evenodd"/>
+    <path d="M126 18h18v18h-18zM162 18h36v18h-36zM126 54h18v36h-18zM162 54h18v18h-18zM198 54h18v54h-18zM126 108h36v18h-36zM180 108h18v36h-18zM36 126h36v18H36zM90 126h18v36H90zM18 162h18v36H18zM54 162h36v18H54zM108 144h18v54h-18zM144 144h18v18h-18zM180 162h36v18h-36zM234 126h18v36h-18zM270 126h42v18h-42zM216 180h18v36h-18zM252 162h18v54h-18zM288 162h24v18h-24zM126 216h18v36h-18zM162 198h36v18h-36zM162 234h18v18h-18zM198 234h36v18h-36zM126 270h36v18h-36zM180 270h18v42h-18zM216 270h18v18h-18zM252 234h18v36h-18zM288 216h24v36h-24zM252 288h36v24h-36z"/>
+  </g>
+  <rect x="113" y="113" width="104" height="104" rx="15" fill="#fff" stroke="#0a0a0a" stroke-width="8"/>
+  <text x="165" y="154" fill="#c8102e" font-family="Arial, sans-serif" font-size="17" font-weight="700" text-anchor="middle">MATCHDAY</text>
+  <text x="165" y="178" fill="#0a0a0a" font-family="Arial, sans-serif" font-size="17" font-weight="700" text-anchor="middle">QR CODE</text>
+  <text x="165" y="202" fill="#c8102e" font-family="Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle">PLACEHOLDER</text>
+</svg>

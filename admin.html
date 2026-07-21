@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="theme-color" content="#c8102e">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <title>Photo Moderation | Leigh Leopards Matchday</title>
   <link rel="stylesheet" href="/admin.css">
 </head>
@@ -20,7 +21,7 @@
         <div class="pin-content">
           <p class="eyebrow">Staff Access</p>
           <h1 id="pin-title">Photo Moderation</h1>
-          <p class="intro-copy">Enter the four-digit matchday code to open the moderation page.</p>
+          <p class="intro-copy">Enter the four-digit matchday code.</p>
 
           <form id="pin-form" class="pin-form" novalidate>
             <label for="pin-input">Four-digit code</label>
@@ -36,10 +37,53 @@
               required
             >
             <p id="pin-message" class="form-message" role="alert" aria-live="polite"></p>
-            <button id="unlock-button" class="primary-button" type="submit">Open Moderation</button>
+            <button id="unlock-button" class="primary-button" type="submit">Continue to Moderator Sign-In</button>
           </form>
 
           <a class="back-link" href="/">Back to Matchday Centre</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="login-view" class="access-view" aria-labelledby="login-title" hidden>
+      <div class="pin-card">
+        <div class="brand-panel" aria-hidden="true">
+          <img src="/assets/leigh-leopards-logo.webp" alt="">
+          <span>Matchday Centre</span>
+        </div>
+
+        <div class="pin-content">
+          <p class="eyebrow">Moderator Sign-In</p>
+          <h1 id="login-title">Staff Account</h1>
+          <p class="intro-copy">Enter the moderator email and password created in Firebase Authentication.</p>
+
+          <form id="login-form" class="access-form staff-form" novalidate>
+            <label for="moderator-email">Moderator email</label>
+            <input
+              id="moderator-email"
+              name="email"
+              type="email"
+              inputmode="email"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+            >
+
+            <label for="moderator-password">Password</label>
+            <input
+              id="moderator-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            >
+
+            <p id="login-message" class="form-message" role="alert" aria-live="polite"></p>
+            <button id="login-button" class="primary-button" type="submit">Sign In to Moderation</button>
+          </form>
+
+          <button id="back-to-pin-button" class="text-button" type="button">Back to code entry</button>
         </div>
       </div>
     </section>
@@ -62,26 +106,14 @@
             <p>Current activation</p>
             <h2>Leigh Leopards v Warrington Wolves</h2>
           </div>
-          <span class="setup-indicator"><i></i> Setup mode</span>
+          <span id="live-indicator" class="setup-indicator is-connecting"><i></i><span>Connecting</span></span>
         </section>
 
         <section class="stats-grid" aria-label="Submission totals">
-          <article class="stat-card stat-card--pending">
-            <span>Pending</span>
-            <strong>0</strong>
-          </article>
-          <article class="stat-card">
-            <span>Approved</span>
-            <strong>0</strong>
-          </article>
-          <article class="stat-card">
-            <span>Rejected</span>
-            <strong>0</strong>
-          </article>
-          <article class="stat-card">
-            <span>Total</span>
-            <strong>0</strong>
-          </article>
+          <article class="stat-card stat-card--pending"><span>Pending</span><strong id="pending-count">0</strong></article>
+          <article class="stat-card"><span>Approved</span><strong id="approved-count">0</strong></article>
+          <article class="stat-card"><span>Rejected</span><strong id="rejected-count">0</strong></article>
+          <article class="stat-card"><span>Total</span><strong id="total-count">0</strong></article>
         </section>
 
         <section class="queue-panel" aria-labelledby="queue-title">
@@ -89,27 +121,35 @@
             <div>
               <p class="eyebrow">Fan Submissions</p>
               <h2 id="queue-title">Approval Queue</h2>
+              <p id="queue-summary" class="queue-summary">Loading submissions…</p>
             </div>
             <div class="filter-tabs" aria-label="Submission filters">
-              <button class="filter-tab is-active" type="button" disabled>Pending</button>
-              <button class="filter-tab" type="button" disabled>Approved</button>
-              <button class="filter-tab" type="button" disabled>Rejected</button>
-              <button class="filter-tab" type="button" disabled>All</button>
+              <button class="filter-tab is-active" type="button" data-filter="pending">Pending</button>
+              <button class="filter-tab" type="button" data-filter="approved">Approved</button>
+              <button class="filter-tab" type="button" data-filter="rejected">Rejected</button>
+              <button class="filter-tab" type="button" data-filter="all">All</button>
             </div>
           </div>
 
-          <div class="empty-state">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3A2 2 0 0 1 22 9.5v9A2 2 0 0 1 20 20H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            <h3>No submissions yet</h3>
-            <p>The page is ready, but the live queue will remain empty until Firebase upload storage and the database are connected.</p>
+          <div id="queue-message" class="empty-state" aria-live="polite">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <h3>Loading submissions</h3>
+            <p>Connecting to the live matchday approval queue.</p>
           </div>
+          <div id="photo-queue" class="photo-queue" aria-live="polite" hidden></div>
         </section>
       </div>
     </section>
   </main>
+
+  <dialog id="photo-dialog" class="photo-dialog">
+    <button id="dialog-close" class="dialog-close" type="button" aria-label="Close photo preview">×</button>
+    <img id="dialog-image" src="" alt="Submitted fan photo">
+    <div class="dialog-caption">
+      <strong id="dialog-name">Fan submission</strong>
+      <span id="dialog-time"></span>
+    </div>
+  </dialog>
 
   <script type="module" src="/admin.js"></script>
 </body>

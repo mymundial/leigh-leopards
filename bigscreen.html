@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#070707">
+  <title>Big Screen Photos | Leigh Leopards Matchday</title>
+  <link rel="preload" href="/assets/leopard-pattern.webp" as="image">
+  <link rel="preload" href="/assets/leigh-leopards-logo.webp" as="image">
+  <link rel="stylesheet" href="/bigscreen.css">
+</head>
+<body>
+  <main class="screen-shell" aria-label="Leigh Leopards matchday photo wall">
+    <aside class="screen-sidebar">
+      <div class="screen-sidebar__top">
+        <img class="screen-club-logo" src="/assets/leigh-leopards-logo.webp" alt="Leigh Leopards">
+        <div class="screen-title-block">
+          <p>Leigh Leopards</p>
+          <h1>Matchday<br>Photos</h1>
+        </div>
+      </div>
+
+      <div class="screen-qr-panel" aria-label="Share photo QR code placeholder">
+        <div class="screen-qr-frame">
+          <img src="/assets/qr-placeholder.svg" alt="QR code placeholder">
+        </div>
+        <p class="screen-qr-kicker">Scan to share</p>
+        <p class="screen-qr-copy">Send us your matchday photo and it could appear on the big screen.</p>
+      </div>
+
+      <div class="screen-sidebar__footer">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span id="screen-status">Waiting for approved photos</span>
+      </div>
+    </aside>
+
+    <section class="photo-wall" aria-label="Approved fan photos">
+      <div id="photo-grid" class="photo-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/bigscreen.js"></script>
+</body>
+</html>

@@ -6,6 +6,21 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function isModerator() {
+      return signedIn()
+        && request.auth.uid == 'Uf3s1aGgddagiK4YUEP4RequxTu2';
+    }
+
+    function approvedSubmission() {
+      return resource.metadata.submissionId is string
+        && firestore.exists(
+          /databases/(default)/documents/photoSubmissions/$(resource.metadata.submissionId)
+        )
+        && firestore.get(
+          /databases/(default)/documents/photoSubmissions/$(resource.metadata.submissionId)
+        ).data.status == 'approved';
+    }
+
     function validFileName(fileName) {
       return request.resource.metadata.submissionId is string
         && request.resource.metadata.submissionId.matches('[A-Za-z0-9_-]{1,80}')
@@ -20,10 +35,11 @@ service firebase.storage {
     }
 
     function validImageUpload(eventId, userId, fileName) {
-      return request.auth.uid == userId
-        && eventId.matches('[A-Za-z0-9_-]{1,80}')
+      return signedIn()
+        && request.auth.uid == userId
+        && eventId == 'leigh-v-warrington-2026'
         && request.resource.size > 0
-        && request.resource.size <= 15 * 1024 * 1024
+        && request.resource.size <= 8 * 1024 * 1024
         && request.resource.contentType in ['image/jpeg', 'image/png', 'image/webp']
         && request.resource.metadata.ownerId == request.auth.uid
         && request.resource.metadata.eventId == eventId
@@ -32,8 +48,10 @@ service firebase.storage {
     }
 
     match /photoSubmissions/{eventId}/{userId}/{fileName} {
-      allow create: if signedIn() && validImageUpload(eventId, userId, fileName);
-      allow read, update, delete: if false;
+      allow get: if isModerator() || approvedSubmission();
+      allow list: if false;
+      allow create: if validImageUpload(eventId, userId, fileName);
+      allow update, delete: if isModerator();
     }
 
     match /{allPaths=**} {

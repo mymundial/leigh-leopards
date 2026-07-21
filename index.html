@@ -157,24 +157,37 @@
           </div>
 
           <div id="photo-picker" class="photo-picker">
-            <div class="picker-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3A2 2 0 0 1 22 9.5v9A2 2 0 0 1 20 20H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
+            <div id="picker-empty" class="picker-empty">
+              <div class="picker-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3A2 2 0 0 1 22 9.5v9A2 2 0 0 1 20 20H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </div>
+              <strong>Add a matchday photo</strong>
+              <span>JPG, PNG or WEBP · up to 15MB</span>
             </div>
-            <strong>Add a matchday photo</strong>
-            <span>JPG, PNG or WEBP · up to 15MB</span>
+
+            <div id="picker-preview" class="picker-preview" hidden>
+              <img id="photo-preview" src="" alt="Selected photo preview">
+              <div class="preview-toolbar">
+                <div class="file-details">
+                  <strong id="file-name"></strong>
+                  <span id="file-size"></span>
+                </div>
+                <button id="remove-photo" class="text-button" type="button">Remove</button>
+              </div>
+            </div>
           </div>
 
           <div class="picker-actions" aria-label="Choose a photo source">
-            <label class="source-button" for="camera-input">
+            <button id="take-photo-button" class="source-button" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3A2 2 0 0 1 22 9.5v9A2 2 0 0 1 20 20H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
                 <circle cx="12" cy="13" r="4" />
               </svg>
               Take Photo
-            </label>
+            </button>
             <input id="camera-input" class="visually-hidden" type="file" accept="image/*" capture="environment">
 
             <label class="source-button" for="gallery-input">
@@ -186,17 +199,6 @@
               Choose Photo
             </label>
             <input id="gallery-input" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp">
-          </div>
-
-          <div id="preview-card" class="preview-card" hidden>
-            <img id="photo-preview" src="" alt="Selected photo preview">
-            <div class="preview-toolbar">
-              <div class="file-details">
-                <strong id="file-name"></strong>
-                <span id="file-size"></span>
-              </div>
-              <button id="remove-photo" class="text-button" type="button">Remove</button>
-            </div>
           </div>
 
           <form id="photo-form" class="photo-form" novalidate>
@@ -227,6 +229,39 @@
             </button>
           </form>
         </div>
+
+        <section id="fan-gallery" class="fan-gallery" aria-labelledby="gallery-title">
+          <header class="gallery-heading">
+            <div>
+              <p class="eyebrow">Approved Photos</p>
+              <h2 id="gallery-title">Fan Gallery</h2>
+            </div>
+            <span class="gallery-live-badge" aria-label="Live gallery">
+              <span aria-hidden="true"></span> Live
+            </span>
+          </header>
+
+          <p class="gallery-intro">See the latest approved photos shared by Leigh supporters. New approvals appear automatically.</p>
+          <p id="gallery-status" class="gallery-status" role="status" aria-live="polite">Loading approved photos…</p>
+
+          <div id="gallery-loading" class="gallery-loading" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+
+          <div id="gallery-grid" class="gallery-grid" aria-label="Approved supporter photos" hidden></div>
+
+          <div id="gallery-empty" class="gallery-empty" hidden>
+            <img src="assets/leigh-leopards-logo.webp" alt="" width="720" height="720">
+            <strong>No approved photos yet</strong>
+            <span>Share yours above and check back after it has been approved.</span>
+          </div>
+
+          <div id="gallery-error" class="gallery-error" hidden>
+            <strong>Gallery unavailable</strong>
+            <span id="gallery-error-copy">Please try again shortly.</span>
+            <button id="gallery-retry" class="text-button" type="button">Try Again</button>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -246,10 +281,47 @@
         <h1 id="success-title">Thanks for sharing!</h1>
         <p>Your photo has been added to the approval queue. Keep an eye on the fan gallery and big screen.</p>
         <button id="share-another" class="action-button" type="button">Share Another</button>
-        <a class="simple-link" href="#home">Back to Matchday Centre</a>
+        <a id="view-gallery" class="simple-link" href="#share-gallery">View Fan Gallery</a>
+        <a class="simple-link simple-link--secondary" href="#home">Back to Matchday Centre</a>
       </div>
     </section>
   </main>
+
+  <div id="gallery-lightbox" class="gallery-lightbox" role="dialog" aria-modal="true" aria-labelledby="gallery-lightbox-title" hidden>
+    <div class="gallery-lightbox-card">
+      <button id="gallery-lightbox-close" class="gallery-lightbox-close" type="button" aria-label="Close photo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19" /></svg>
+      </button>
+      <img id="gallery-lightbox-image" src="" alt="">
+      <div class="gallery-lightbox-caption">
+        <strong id="gallery-lightbox-title">Matchday photo</strong>
+        <span id="gallery-lightbox-meta"></span>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="camera-modal" class="camera-modal" role="dialog" aria-modal="true" aria-labelledby="camera-modal-title" hidden>
+    <div class="camera-modal-card">
+      <div class="camera-modal-header">
+        <strong id="camera-modal-title">Take a Matchday Photo</strong>
+        <button id="camera-close" class="camera-close" type="button" aria-label="Close camera">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19" /></svg>
+        </button>
+      </div>
+      <div class="camera-stage">
+        <video id="camera-video" autoplay muted playsinline></video>
+        <div class="camera-guide" aria-hidden="true"></div>
+      </div>
+      <div class="camera-actions">
+        <button id="camera-cancel" class="camera-secondary-button" type="button">Cancel</button>
+        <button id="camera-capture" class="camera-capture-button" type="button" aria-label="Take photo">
+          <span aria-hidden="true"></span>
+        </button>
+        <span class="camera-action-spacer" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
 
   <div id="challenge-modal" class="challenge-modal" role="dialog" aria-modal="true" aria-labelledby="challenge-result-title" hidden>
     <div class="challenge-modal-card">

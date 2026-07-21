@@ -6,6 +6,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isModerator() {
+      return signedIn()
+        && request.auth.uid == 'Uf3s1aGgddagiK4YUEP4RequxTu2';
+    }
+
     function validStoragePath(submissionId) {
       return (
           request.resource.data.contentType == 'image/jpeg'
@@ -40,8 +45,7 @@ service cloud.firestore {
         ])
         && request.resource.data.id == submissionId
         && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.eventId is string
-        && request.resource.data.eventId.matches('[A-Za-z0-9_-]{1,80}')
+        && request.resource.data.eventId == 'leigh-v-warrington-2026'
         && request.resource.data.status == 'pending'
         && request.resource.data.supporterName is string
         && request.resource.data.supporterName.size() <= 30
@@ -56,12 +60,42 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.consentVersion == '2026-07-19'
         && request.resource.data.source == 'leigh-matchday-web'
-        && request.resource.data.clientVersion == 'share-photos-pass-2';
+        && request.resource.data.clientVersion in ['share-photos-pass-2', 'share-photos-pass-5c'];
+    }
+
+    match /adminUsers/{userId} {
+      allow get: if signedIn() && request.auth.uid == userId;
+      allow list, create, update, delete: if false;
     }
 
     match /photoSubmissions/{submissionId} {
       allow create: if signedIn() && validPhotoSubmission(submissionId);
-      allow read, update, delete: if false;
+      allow get, list: if isModerator() || resource.data.status == 'approved';
+      allow update, delete: if isModerator();
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create, update, delete: if isModerator();
+
+      match /scores/{scoreId} {
+        allow read: if true;
+        allow create: if signedIn()
+          && eventId == 'leigh-v-warrington-2026'
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.keys().hasOnly([
+            'ownerUid', 'playerName', 'score', 'createdAt'
+          ])
+          && request.resource.data.playerName is string
+          && request.resource.data.playerName.size() >= 1
+          && request.resource.data.playerName.size() <= 24
+          && request.resource.data.score is int
+          && request.resource.data.score >= 0
+          && request.resource.data.score <= 9999
+          && request.resource.data.createdAt is timestamp;
+        allow update: if false;
+        allow delete: if isModerator();
+      }
     }
 
     match /{document=**} {

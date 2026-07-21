@@ -7,10 +7,12 @@ const views = {
 
 const toast = document.querySelector('.toast');
 const placeholderButtons = document.querySelectorAll('.placeholder-button');
+const takePhotoButton = document.querySelector('#take-photo-button');
 const cameraInput = document.querySelector('#camera-input');
 const galleryInput = document.querySelector('#gallery-input');
 const photoPicker = document.querySelector('#photo-picker');
-const previewCard = document.querySelector('#preview-card');
+const pickerEmpty = document.querySelector('#picker-empty');
+const pickerPreview = document.querySelector('#picker-preview');
 const photoPreview = document.querySelector('#photo-preview');
 const fileName = document.querySelector('#file-name');
 const fileSize = document.querySelector('#file-size');
@@ -27,6 +29,24 @@ const uploadProgress = document.querySelector('#upload-progress');
 const uploadStatus = document.querySelector('#upload-status');
 const uploadPercent = document.querySelector('#upload-percent');
 const uploadProgressBar = document.querySelector('#upload-progress-bar');
+const fanGallery = document.querySelector('#fan-gallery');
+const galleryStatus = document.querySelector('#gallery-status');
+const galleryLoading = document.querySelector('#gallery-loading');
+const galleryGrid = document.querySelector('#gallery-grid');
+const galleryEmpty = document.querySelector('#gallery-empty');
+const galleryError = document.querySelector('#gallery-error');
+const galleryErrorCopy = document.querySelector('#gallery-error-copy');
+const galleryRetryButton = document.querySelector('#gallery-retry');
+const galleryLightbox = document.querySelector('#gallery-lightbox');
+const galleryLightboxClose = document.querySelector('#gallery-lightbox-close');
+const galleryLightboxImage = document.querySelector('#gallery-lightbox-image');
+const galleryLightboxTitle = document.querySelector('#gallery-lightbox-title');
+const galleryLightboxMeta = document.querySelector('#gallery-lightbox-meta');
+const cameraModal = document.querySelector('#camera-modal');
+const cameraVideo = document.querySelector('#camera-video');
+const cameraCloseButton = document.querySelector('#camera-close');
+const cameraCancelButton = document.querySelector('#camera-cancel');
+const cameraCaptureButton = document.querySelector('#camera-capture');
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const VALID_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -35,6 +55,12 @@ let previewUrl = '';
 let toastTimer;
 let activeView = 'home';
 let uploadInProgress = false;
+let galleryStarting = false;
+let galleryUnsubscribe = null;
+let galleryLastTrigger = null;
+let lightboxOpener = null;
+let cameraStream = null;
+let cameraOpening = false;
 
 function showView(name) {
   Object.entries(views).forEach(([viewName, element]) => {
@@ -45,6 +71,13 @@ function showView(name) {
   document.body.style.overflow = name === 'turley' ? 'hidden' : '';
   activeView = name;
   window.scrollTo({ top: 0, behavior: 'instant' });
+
+  if (name === 'share') {
+    startFanGallery();
+  } else {
+    closeGalleryLightbox();
+    closeCamera();
+  }
 }
 
 function routeFromHash() {
@@ -57,8 +90,14 @@ function routeFromHash() {
     return;
   }
 
-  if (route === 'share') {
+  if (route === 'share' || route === 'share-gallery') {
     showView('share');
+
+    if (route === 'share-gallery') {
+      window.requestAnimationFrame(() => {
+        fanGallery?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
     return;
   }
 
@@ -106,6 +145,7 @@ function setUploadState(isUploading) {
   photoForm.classList.toggle('is-uploading', isUploading);
   pickerActions.classList.toggle('is-uploading', isUploading);
   previewToolbar.classList.toggle('is-uploading', isUploading);
+  takePhotoButton.disabled = isUploading;
   cameraInput.disabled = isUploading;
   galleryInput.disabled = isUploading;
   removePhotoButton.disabled = isUploading;
@@ -126,8 +166,9 @@ function clearPreview() {
   photoPreview.removeAttribute('src');
   fileName.textContent = '';
   fileSize.textContent = '';
-  previewCard.hidden = true;
-  photoPicker.hidden = false;
+  pickerPreview.hidden = true;
+  pickerEmpty.hidden = false;
+  photoPicker.classList.remove('has-photo');
   cameraInput.value = '';
   galleryInput.value = '';
   formMessage.textContent = '';
@@ -158,8 +199,9 @@ function displayFile(file) {
   photoPreview.src = previewUrl;
   fileName.textContent = file.name || 'Matchday photo';
   fileSize.textContent = formatFileSize(file.size);
-  previewCard.hidden = false;
-  photoPicker.hidden = true;
+  pickerEmpty.hidden = true;
+  pickerPreview.hidden = false;
+  photoPicker.classList.add('has-photo');
   updateSubmitState();
 }
 
@@ -178,14 +220,136 @@ function resetForm() {
   setUploadProgress({ visible: false });
 }
 
+
+function stopCameraStream() {
+  if (!cameraStream) return;
+
+  cameraStream.getTracks().forEach((track) => track.stop());
+  cameraStream = null;
+  cameraVideo.srcObject = null;
+}
+
+function closeCamera() {
+  stopCameraStream();
+  cameraModal.hidden = true;
+  document.body.classList.remove('camera-open');
+  cameraOpening = false;
+}
+
+function cameraErrorMessage(error) {
+  const name = String(error?.name || '');
+
+  if (!window.isSecureContext) {
+    return 'The live camera needs HTTPS. Use Choose Photo while testing on a non-secure address.';
+  }
+
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return 'Camera permission was not allowed. Enable camera access for this site or use Choose Photo.';
+  }
+
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    return 'No camera was found on this device. Use Choose Photo instead.';
+  }
+
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    return 'The camera is being used by another app. Close it there and try again.';
+  }
+
+  return 'The camera could not be opened. Use Choose Photo instead.';
+}
+
+async function openCamera() {
+  if (uploadInProgress || cameraOpening) return;
+  formMessage.textContent = '';
+
+  if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
+    // Mobile browsers that do not expose getUserMedia can still honour the
+    // capture attribute and open the rear camera directly.
+    cameraInput.click();
+    return;
+  }
+
+  cameraOpening = true;
+  takePhotoButton.disabled = true;
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1440 },
+      },
+    });
+
+    cameraVideo.srcObject = cameraStream;
+    cameraModal.hidden = false;
+    document.body.classList.add('camera-open');
+    await cameraVideo.play();
+  } catch (error) {
+    console.error('Camera opening failed:', error);
+    stopCameraStream();
+    formMessage.textContent = cameraErrorMessage(error);
+  } finally {
+    cameraOpening = false;
+    takePhotoButton.disabled = uploadInProgress;
+  }
+}
+
+async function captureCameraPhoto() {
+  if (!cameraStream || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+    formMessage.textContent = 'The camera is still starting. Try the shutter again.';
+    return;
+  }
+
+  cameraCaptureButton.disabled = true;
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = cameraVideo.videoWidth;
+    canvas.height = cameraVideo.videoHeight;
+
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) throw new Error('Camera canvas unavailable.');
+
+    context.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.9);
+    });
+
+    if (!blob) throw new Error('Camera capture failed.');
+
+    const file = new File([blob], `leigh-matchday-${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+
+    closeCamera();
+    displayFile(file);
+  } catch (error) {
+    console.error('Camera capture failed:', error);
+    formMessage.textContent = 'The photo could not be captured. Please try again.';
+  } finally {
+    cameraCaptureButton.disabled = false;
+  }
+}
+
 placeholderButtons.forEach((button) => {
   button.addEventListener('click', () => {
     showToast(button.dataset.placeholder || 'Coming soon.');
   });
 });
 
+takePhotoButton.addEventListener('click', openCamera);
 cameraInput.addEventListener('change', handleFileSelection);
 galleryInput.addEventListener('change', handleFileSelection);
+cameraCloseButton.addEventListener('click', closeCamera);
+cameraCancelButton.addEventListener('click', closeCamera);
+cameraCaptureButton.addEventListener('click', captureCameraPhoto);
+cameraModal.addEventListener('click', (event) => {
+  if (event.target === cameraModal) closeCamera();
+});
 removePhotoButton.addEventListener('click', clearPreview);
 consentInput.addEventListener('change', updateSubmitState);
 
@@ -200,8 +364,12 @@ function firebaseErrorMessage(error) {
     return 'Anonymous sign-in is not enabled in Firebase Authentication yet.';
   }
 
-  if (code === 'storage/unauthorized' || code === 'permission-denied') {
-    return 'Firebase blocked the upload. Deploy the included Firestore and Storage rules, then try again.';
+  if (code === 'storage/unauthorized') {
+    return 'Firebase Storage blocked this photo. Publish the updated Storage rules and try again.';
+  }
+
+  if (code === 'permission-denied') {
+    return 'Firestore blocked the submission record. Publish the updated Firestore rules and try again.';
   }
 
   if (code === 'storage/quota-exceeded') {
@@ -222,6 +390,12 @@ function firebaseErrorMessage(error) {
 
   return 'The photo could not be submitted. Please try again.';
 }
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !cameraModal.hidden) {
+    closeCamera();
+  }
+});
 
 photoForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -271,6 +445,191 @@ photoForm.addEventListener('submit', async (event) => {
 shareAnotherButton.addEventListener('click', () => {
   resetForm();
   window.location.hash = 'share';
+});
+
+/* --------------------------------------------------------------------------
+   FAN GALLERY
+   Approved Firestore records are listened to in real time. Storage URLs are
+   resolved only for approved photos returned by the secured query.
+   -------------------------------------------------------------------------- */
+
+function setGalleryState(state, message = '') {
+  const isLoading = state === 'loading';
+  const isReady = state === 'ready';
+  const isEmpty = state === 'empty';
+  const isError = state === 'error';
+
+  galleryLoading.hidden = !isLoading;
+  galleryGrid.hidden = !isReady;
+  galleryEmpty.hidden = !isEmpty;
+  galleryError.hidden = !isError;
+
+  if (message) galleryStatus.textContent = message;
+}
+
+function galleryErrorMessage(error) {
+  const code = String(error?.code || '');
+
+  if (!navigator.onLine) {
+    return 'You appear to be offline. Reconnect and try again.';
+  }
+
+  if (code === 'failed-precondition') {
+    return 'The gallery index is still being prepared in Firebase. Try again shortly.';
+  }
+
+  if (code === 'permission-denied' || code === 'storage/unauthorized') {
+    return 'Firebase has blocked the gallery. Check the published Firestore and Storage rules.';
+  }
+
+  return 'The approved photos could not be loaded. Please try again shortly.';
+}
+
+function formatGalleryDate(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 'Matchday';
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function closeGalleryLightbox() {
+  if (!galleryLightbox || galleryLightbox.hidden) return;
+
+  galleryLightbox.hidden = true;
+  document.body.classList.remove('gallery-lightbox-open');
+  galleryLightboxImage.removeAttribute('src');
+  galleryLightboxImage.alt = '';
+
+  const opener = lightboxOpener;
+  lightboxOpener = null;
+  opener?.focus?.();
+}
+
+function openGalleryLightbox(photo, opener) {
+  lightboxOpener = opener || null;
+  galleryLightboxImage.src = photo.imageUrl;
+  galleryLightboxImage.alt = photo.supporterName
+    ? `Matchday photo shared by ${photo.supporterName}`
+    : 'Leigh Leopards supporter matchday photo';
+  galleryLightboxTitle.textContent = photo.supporterName || 'Leigh supporter';
+  galleryLightboxMeta.textContent = formatGalleryDate(photo.approvedAt || photo.createdAt);
+  galleryLightbox.hidden = false;
+  document.body.classList.add('gallery-lightbox-open');
+  galleryLightboxClose.focus();
+}
+
+function createGalleryCard(photo) {
+  const button = document.createElement('button');
+  button.className = 'gallery-card';
+  button.type = 'button';
+  button.setAttribute('aria-label', photo.supporterName
+    ? `Open photo shared by ${photo.supporterName}`
+    : 'Open supporter photo');
+
+  const image = document.createElement('img');
+  image.src = photo.imageUrl;
+  image.alt = photo.supporterName
+    ? `Matchday photo shared by ${photo.supporterName}`
+    : 'Leigh Leopards supporter matchday photo';
+  image.loading = 'lazy';
+  image.decoding = 'async';
+
+  const caption = document.createElement('span');
+  caption.className = 'gallery-card-caption';
+
+  const name = document.createElement('strong');
+  name.textContent = photo.supporterName || 'Leigh supporter';
+
+  const date = document.createElement('span');
+  date.textContent = formatGalleryDate(photo.approvedAt || photo.createdAt);
+
+  const crest = document.createElement('img');
+  crest.className = 'gallery-card-crest';
+  crest.src = 'assets/leigh-leopards-logo.webp';
+  crest.alt = '';
+  crest.width = 720;
+  crest.height = 720;
+
+  caption.append(name, date);
+  button.append(image, crest, caption);
+  button.addEventListener('click', () => openGalleryLightbox(photo, button));
+  return button;
+}
+
+function renderApprovedPhotos(photos) {
+  galleryGrid.replaceChildren();
+
+  if (!photos.length) {
+    setGalleryState('empty', 'No approved photos yet.');
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  photos.forEach((photo) => fragment.append(createGalleryCard(photo)));
+  galleryGrid.append(fragment);
+
+  const countCopy = `${photos.length} approved ${photos.length === 1 ? 'photo' : 'photos'} · updates live`;
+  setGalleryState('ready', countCopy);
+}
+
+async function startFanGallery({ force = false } = {}) {
+  if (galleryStarting) return;
+
+  if (force && galleryUnsubscribe) {
+    galleryUnsubscribe();
+    galleryUnsubscribe = null;
+  }
+
+  if (galleryUnsubscribe) return;
+
+  galleryStarting = true;
+  galleryLastTrigger = Date.now();
+  setGalleryState('loading', 'Loading approved photos…');
+
+  try {
+    const { subscribeToApprovedPhotos } = await import('./firebase.js');
+    galleryUnsubscribe = subscribeToApprovedPhotos({
+      maximum: 18,
+      onChange: renderApprovedPhotos,
+      onError: (error) => {
+        console.error('Fan gallery failed:', error);
+        galleryErrorCopy.textContent = galleryErrorMessage(error);
+        setGalleryState('error', 'Gallery unavailable.');
+      },
+    });
+  } catch (error) {
+    console.error('Could not start fan gallery:', error);
+    galleryErrorCopy.textContent = galleryErrorMessage(error);
+    setGalleryState('error', 'Gallery unavailable.');
+  } finally {
+    galleryStarting = false;
+  }
+}
+
+galleryRetryButton.addEventListener('click', () => startFanGallery({ force: true }));
+galleryLightboxClose.addEventListener('click', closeGalleryLightbox);
+galleryLightbox.addEventListener('click', (event) => {
+  if (event.target === galleryLightbox) closeGalleryLightbox();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !galleryLightbox.hidden) {
+    closeGalleryLightbox();
+  }
+});
+
+window.addEventListener('online', () => {
+  if (activeView !== 'share') return;
+  const elapsed = Date.now() - Number(galleryLastTrigger || 0);
+  if (elapsed > 1500) startFanGallery({ force: true });
+});
+
+window.addEventListener('beforeunload', () => {
+  galleryUnsubscribe?.();
 });
 
 /* --------------------------------------------------------------------------
